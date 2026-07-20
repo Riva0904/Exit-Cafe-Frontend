@@ -106,6 +106,7 @@ function HistoryTab() {
     queryKey: ['orders', 'my'],
     queryFn: ordersApi.getMyOrders,
     enabled: isAuthenticated,
+    refetchInterval: 15_000,
   });
 
   if (!isAuthenticated) {

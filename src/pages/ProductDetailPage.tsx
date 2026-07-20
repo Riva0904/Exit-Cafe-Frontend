@@ -107,6 +107,7 @@ export function ProductDetailPage() {
                       isNewArrival: product.isNewArrival,
                       averageRating: product.averageRating,
                       reviewCount: product.reviewCount,
+                      stockQuantity: product.stockQuantity,
                       categoryName: product.categoryName,
                     },
                     quantity,

@@ -30,6 +30,7 @@ export interface ProductListItem {
   isNewArrival: boolean;
   averageRating: number;
   reviewCount: number;
+  stockQuantity: number;
   categoryName: string;
 }
 

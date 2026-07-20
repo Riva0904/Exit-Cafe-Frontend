@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fi';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
+import { NotificationBell } from './NotificationBell';
 
 const links = [
   { to: '/admin', label: 'Dashboard', icon: FiGrid, end: true },
@@ -66,6 +67,9 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex-1 overflow-y-auto">
+        <div className="flex justify-end border-b border-white/10 px-6 py-3">
+          <NotificationBell />
+        </div>
         <div className="mx-auto max-w-6xl px-6 py-8">
           <Outlet />
         </div>

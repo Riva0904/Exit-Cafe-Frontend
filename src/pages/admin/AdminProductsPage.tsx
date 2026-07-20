@@ -17,7 +17,10 @@ const schema = z.object({
   sku: z.string().min(1, 'SKU is required'),
   categoryId: z.string().min(1, 'Category is required'),
   price: z.coerce.number().positive('Must be greater than 0'),
-  discountPrice: z.coerce.number().optional(),
+  discountPrice: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? undefined : val),
+    z.coerce.number().positive('Must be greater than 0 if set').optional(),
+  ),
   stockQuantity: z.coerce.number().min(0),
   shortDescription: z.string().optional(),
   description: z.string().optional(),
@@ -136,7 +139,11 @@ export function AdminProductsPage() {
                 <td className="p-4">{product.name}</td>
                 <td className="p-4">{product.categoryName}</td>
                 <td className="p-4">₹{(product.discountPrice ?? product.price).toFixed(0)}</td>
-                <td className="p-4">-</td>
+                <td className="p-4">
+                  <span className={product.stockQuantity <= 10 ? 'font-medium text-amber-400' : ''}>
+                    {product.stockQuantity}
+                  </span>
+                </td>
                 <td className="p-4">{product.isAvailable ? 'Available' : 'Unavailable'}</td>
                 <td className="p-4">
                   <div className="flex gap-3">
