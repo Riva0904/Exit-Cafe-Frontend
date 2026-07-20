@@ -16,6 +16,7 @@ export const ordersApi = {
   getById: (id: string) => unwrap(apiClient.get<ApiResponse<Order>>(`/orders/${id}`)),
   getByCustomer: (customerId: string) =>
     unwrap(apiClient.get<ApiResponse<Order[]>>(`/orders/customer/${customerId}`)),
+  getMyOrders: () => unwrap(apiClient.get<ApiResponse<Order[]>>('/orders/my')),
   create: (payload: CreateOrderRequest) => unwrap(apiClient.post<ApiResponse<Order>>('/orders', payload)),
   updateStatus: (id: string, status: OrderStatusValue) =>
     unwrap(apiClient.patch<ApiResponse<Order>>(`/orders/${id}/status`, { status })),

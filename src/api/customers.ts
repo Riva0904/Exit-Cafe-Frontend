@@ -14,6 +14,7 @@ export const customersApi = {
   getAll: (params: PaginationParams) =>
     unwrap(apiClient.get<ApiResponse<PagedResult<Customer>>>('/customers', { params })),
   getById: (id: string) => unwrap(apiClient.get<ApiResponse<Customer>>(`/customers/${id}`)),
+  getMe: () => unwrap(apiClient.get<ApiResponse<Customer>>('/customers/me')),
   getAddresses: (id: string) =>
     unwrap(apiClient.get<ApiResponse<CustomerAddress[]>>(`/customers/${id}/addresses`)),
   addAddress: (id: string, payload: CreateAddressRequest) =>

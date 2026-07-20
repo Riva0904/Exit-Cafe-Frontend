@@ -2,11 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { clearCart } from '@/features/cart/cartSlice';
 import { ordersApi } from '@/api/orders';
+import { customersApi } from '@/api/customers';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { OrderType, PaymentMethod } from '@/types/order';
@@ -45,8 +46,15 @@ const paymentMethodMap: Record<CheckoutForm['paymentMethod'], number> = {
 export function CheckoutPage() {
   const items = useAppSelector((s) => s.cart.items);
   const user = useAppSelector((s) => s.auth.user);
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const { data: myCustomer } = useQuery({
+    queryKey: ['customers', 'me'],
+    queryFn: customersApi.getMe,
+    enabled: isAuthenticated,
+  });
 
   const {
     register,
@@ -73,10 +81,11 @@ export function CheckoutPage() {
     mutationFn: (values: CheckoutForm) => {
       const [guestFirstName, ...rest] = values.fullName.trim().split(/\s+/);
       return ordersApi.create({
-        guestFirstName,
-        guestLastName: rest.join(' ') || guestFirstName,
-        guestEmail: values.guestEmail,
-        guestPhone: values.guestPhone,
+        customerId: myCustomer?.id,
+        guestFirstName: myCustomer ? undefined : guestFirstName,
+        guestLastName: myCustomer ? undefined : rest.join(' ') || guestFirstName,
+        guestEmail: myCustomer ? undefined : values.guestEmail,
+        guestPhone: myCustomer ? undefined : values.guestPhone,
         orderType: values.orderType === 'delivery' ? OrderType.Delivery : OrderType.Pickup,
         deliveryAddressLine1: values.orderType === 'delivery' ? values.addressLine1 : undefined,
         deliveryCity: values.orderType === 'delivery' ? values.city : undefined,
