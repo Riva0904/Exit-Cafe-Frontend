@@ -59,13 +59,13 @@ export function HomePage() {
 
   return (
     <div>
-      <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden">
+      <section className="relative flex min-h-[95vh] items-center justify-center overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/hero-storefront.jpg')" }}
+          className="absolute inset-0 bg-cover bg-center bg-fixed"
+          style={{ backgroundImage: "url('/hero-storefront.png')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink-950/90 via-ink-950/80 to-ink-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(212,175,55,0.15),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink-950/60 via-ink-950/50 to-ink-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(212,175,55,0.12),transparent_65%)]" />
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -76,7 +76,10 @@ export function HomePage() {
             Delight in every bite
           </p>
           <h1 className="font-display text-5xl font-bold leading-tight text-cream-100 sm:text-6xl lg:text-7xl">
-            Exit <span className="text-gradient-gold">Caff</span>
+            Exit{' '}
+            <span className="glitch-text text-gradient-gold" data-text="Caff">
+              Caff
+            </span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-cream-200/70">
             Handcrafted cakes, artisan pastries and freshly brewed coffee — a luxury bakery experience at
@@ -84,12 +87,12 @@ export function HomePage() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link to="/menu">
-              <Button size="lg">
+              <Button size="lg" className="glitch-btn">
                 Explore Menu <FiArrowRight />
               </Button>
             </Link>
             <Link to="/custom-cakes">
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" className="glitch-btn">
                 Order Custom Cake
               </Button>
             </Link>
