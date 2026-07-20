@@ -1,11 +1,23 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
-import { FiArrowRight, FiAward, FiClock, FiTruck } from 'react-icons/fi';
+import {
+  FiArrowRight,
+  FiAward,
+  FiClock,
+  FiTruck,
+  FiHeart,
+  FiShield,
+  FiStar,
+  FiUsers,
+  FiPackage,
+  FiCoffee,
+} from 'react-icons/fi';
 import { productsApi, categoriesApi } from '@/api/catalog';
 import { ProductCard } from '@/features/products/ProductCard';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
+import { CountUp } from '@/components/ui/CountUp';
 
 function Section({
   title,
@@ -49,6 +61,16 @@ const whyChooseUs = [
   { icon: FiAward, title: 'Premium Ingredients', desc: 'Only the finest, freshest ingredients in every bake.' },
   { icon: FiClock, title: 'Baked Fresh Daily', desc: 'Everything is made in-house, every single day.' },
   { icon: FiTruck, title: 'Fast Delivery', desc: 'Same-day delivery across the city, on time, every time.' },
+  { icon: FiHeart, title: 'Made with Love', desc: 'Every recipe is crafted by hand, never mass-produced.' },
+  { icon: FiShield, title: 'Hygienic Kitchen', desc: 'Spotless prep areas and strict food-safety standards.' },
+  { icon: FiUsers, title: 'Loved by Locals', desc: 'A neighbourhood favourite, one order at a time.' },
+];
+
+const stats = [
+  { icon: FiStar, value: 4.8, decimals: 1, suffix: '/5', label: 'Average Rating' },
+  { icon: FiUsers, value: 500, suffix: '+', label: 'Happy Customers' },
+  { icon: FiPackage, value: 80, suffix: '+', label: 'Menu Items' },
+  { icon: FiCoffee, value: 100, suffix: '%', label: 'Freshly Made' },
 ];
 
 export function HomePage() {
@@ -139,16 +161,64 @@ export function HomePage() {
         <ProductGrid queryKey="new-arrivals" fetcher={productsApi.getNewArrivals} />
       </Section>
 
-      <section className="border-y border-white/10 bg-ink-900/40">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
-          {whyChooseUs.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gold-500/10 text-gold-400">
-                <Icon size={22} />
-              </div>
-              <h3 className="font-display mt-4 text-lg font-semibold text-cream-100">{title}</h3>
+      <section className="relative overflow-hidden border-y border-white/10 bg-ink-900/40">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(212,175,55,0.06),transparent_70%)]" />
+        <div className="relative mx-auto max-w-3xl px-4 pt-16 text-center sm:px-6 lg:px-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-gold-500">Why Choose Us</p>
+          <h2 className="font-display mt-2 text-3xl font-bold text-cream-100 sm:text-4xl">
+            Baked with care, served with pride
+          </h2>
+        </div>
+        <div className="relative mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
+          {whyChooseUs.map(({ icon: Icon, title, desc }, index) => (
+            <motion.div
+              key={title}
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.55, delay: index * 0.15, ease: 'easeOut' }}
+              whileHover={{ y: -6 }}
+              className="group text-center"
+            >
+              <motion.div
+                className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gold-500/10 text-gold-400"
+                whileHover={{ scale: 1.12, rotate: 6 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 12 }}
+              >
+                <span className="absolute inset-0 animate-ping rounded-full bg-gold-500/20 [animation-duration:2.5s] group-hover:bg-gold-500/30" />
+                <span className="absolute inset-0 rounded-full ring-1 ring-gold-500/20 transition-all duration-300 group-hover:ring-4 group-hover:ring-gold-500/30" />
+                <Icon size={24} className="relative transition-transform duration-300 group-hover:scale-110" />
+              </motion.div>
+              <h3 className="font-display mt-5 text-lg font-semibold text-cream-100 transition-colors duration-300 group-hover:text-gold-400">
+                {title}
+              </h3>
               <p className="mt-2 text-sm text-cream-200/60">{desc}</p>
-            </div>
+              <motion.span
+                className="mx-auto mt-4 block h-px w-0 bg-gradient-to-r from-transparent via-gold-500 to-transparent transition-all duration-500 group-hover:w-24"
+              />
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-gradient-to-b from-ink-950 via-brown-900/40 to-ink-950 py-16">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,175,55,0.1),transparent_60%)]" />
+        <div className="relative mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
+          {stats.map(({ icon: Icon, value, decimals, suffix, label }, index) => (
+            <motion.div
+              key={label}
+              initial={{ opacity: 0, scale: 0.85 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.45, delay: index * 0.1, ease: 'easeOut' }}
+              className="flex flex-col items-center gap-2 text-center"
+            >
+              <Icon className="text-gold-500" size={22} />
+              <p className="font-display text-3xl font-bold text-gradient-gold sm:text-4xl">
+                <CountUp value={value} decimals={decimals} suffix={suffix} startOnView />
+              </p>
+              <p className="text-xs uppercase tracking-wider text-cream-200/50">{label}</p>
+            </motion.div>
           ))}
         </div>
       </section>
