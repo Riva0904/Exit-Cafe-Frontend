@@ -48,6 +48,10 @@ export interface Order {
   deliveryFee: number;
   totalAmount: number;
   couponCode?: string;
+  deliveryAddressLine1?: string;
+  deliveryCity?: string;
+  deliveryState?: string;
+  deliveryPostalCode?: string;
   deliveryDate?: string;
   deliveryTime?: string;
   paymentStatus: number;
@@ -70,6 +74,10 @@ export interface CreateOrderRequest {
   guestPhone?: string;
   orderType: number;
   deliveryAddressId?: string;
+  deliveryAddressLine1?: string;
+  deliveryCity?: string;
+  deliveryState?: string;
+  deliveryPostalCode?: string;
   deliveryDate?: string;
   deliveryTime?: string;
   paymentMethod: number;

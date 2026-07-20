@@ -8,16 +8,16 @@ import {
   FiTruck,
   FiHeart,
   FiShield,
-  FiStar,
   FiUsers,
   FiPackage,
-  FiCoffee,
 } from 'react-icons/fi';
 import { productsApi, categoriesApi } from '@/api/catalog';
+import { customersApi } from '@/api/customers';
 import { ProductCard } from '@/features/products/ProductCard';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { CountUp } from '@/components/ui/CountUp';
+import { Carousel, CarouselItem } from '@/components/ui/Carousel';
 
 function Section({
   title,
@@ -39,6 +39,32 @@ function Section({
   );
 }
 
+const PRODUCT_SLIDE_THRESHOLD = 8;
+const CATEGORY_SLIDE_THRESHOLD = 12;
+
+function CategoryTile({ category }: { category: import('@/types/catalog').Category }) {
+  return (
+    <Link
+      to={`/menu?category=${category.id}`}
+      className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-ink-900/40 p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/50 hover:shadow-gold-glow"
+    >
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-gold-500/0 via-gold-500/0 to-gold-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-hover:from-gold-500/5 group-hover:to-transparent" />
+      {category.imageUrl ? (
+        <div className="relative h-16 w-16 overflow-hidden rounded-full ring-2 ring-transparent transition-all duration-300 group-hover:scale-110 group-hover:ring-gold-500/60">
+          <img src={category.imageUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+        </div>
+      ) : (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold-500/10 text-gold-400 transition-all duration-300 group-hover:scale-110 group-hover:bg-gold-500/20">
+          {category.name.charAt(0)}
+        </div>
+      )}
+      <span className="relative text-sm font-medium text-cream-200/80 transition-colors duration-300 group-hover:text-gold-400">
+        {category.name}
+      </span>
+    </Link>
+  );
+}
+
 function ProductGrid({ queryKey, fetcher }: { queryKey: string; fetcher: () => Promise<unknown> }) {
   const { data, isLoading } = useQuery({
     queryKey: [queryKey],
@@ -47,6 +73,18 @@ function ProductGrid({ queryKey, fetcher }: { queryKey: string; fetcher: () => P
 
   if (isLoading) return <PageSpinner />;
   if (!data || data.length === 0) return <p className="text-center text-cream-200/50">Nothing here yet.</p>;
+
+  if (data.length >= PRODUCT_SLIDE_THRESHOLD) {
+    return (
+      <Carousel>
+        {data.map((product) => (
+          <CarouselItem key={product.id}>
+            <ProductCard product={product} />
+          </CarouselItem>
+        ))}
+      </Carousel>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
@@ -66,18 +104,24 @@ const whyChooseUs = [
   { icon: FiUsers, title: 'Loved by Locals', desc: 'A neighbourhood favourite, one order at a time.' },
 ];
 
-const stats = [
-  { icon: FiStar, value: 4.8, decimals: 1, suffix: '/5', label: 'Average Rating' },
-  { icon: FiUsers, value: 500, suffix: '+', label: 'Happy Customers' },
-  { icon: FiPackage, value: 80, suffix: '+', label: 'Menu Items' },
-  { icon: FiCoffee, value: 100, suffix: '%', label: 'Freshly Made' },
-];
-
 export function HomePage() {
   const { data: categories } = useQuery({
     queryKey: ['categories', 'home'],
     queryFn: () => categoriesApi.getAll(),
   });
+  const { data: productCount } = useQuery({
+    queryKey: ['stats', 'product-count'],
+    queryFn: () => productsApi.getAll({ pageNumber: 1, pageSize: 1 }),
+  });
+  const { data: customerCount } = useQuery({
+    queryKey: ['stats', 'customer-count'],
+    queryFn: () => customersApi.getAll({ pageNumber: 1, pageSize: 1 }),
+  });
+
+  const stats = [
+    { icon: FiPackage, value: productCount?.totalCount ?? 0, label: 'Menu Items' },
+    { icon: FiUsers, value: customerCount?.totalCount ?? 0, label: 'Customers' },
+  ];
 
   return (
     <div>
@@ -113,9 +157,9 @@ export function HomePage() {
                 Explore Menu <FiArrowRight />
               </Button>
             </Link>
-            <Link to="/custom-cakes">
+            <Link to="/contact">
               <Button size="lg" variant="outline" className="glitch-btn">
-                Order Custom Cake
+                Contact Us
               </Button>
             </Link>
           </div>
@@ -132,28 +176,21 @@ export function HomePage() {
 
       {categories && categories.length > 0 && (
         <Section title="Shop by Category">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {categories.slice(0, 12).map((cat) => (
-              <Link
-                key={cat.id}
-                to={`/menu?category=${cat.id}`}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-ink-900/40 p-5 text-center transition-colors hover:border-gold-500/40"
-              >
-                {cat.imageUrl ? (
-                  <div className="h-14 w-14 overflow-hidden rounded-full ring-2 ring-transparent transition-all group-hover:ring-gold-500/50">
-                    <img src={cat.imageUrl} alt="" className="h-full w-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-500/10 text-gold-400 group-hover:bg-gold-500/20">
-                    {cat.name.charAt(0)}
-                  </div>
-                )}
-                <span className="text-sm font-medium text-cream-200/80 group-hover:text-gold-400">
-                  {cat.name}
-                </span>
-              </Link>
-            ))}
-          </div>
+          {categories.length > CATEGORY_SLIDE_THRESHOLD ? (
+            <Carousel>
+              {categories.map((cat) => (
+                <CarouselItem key={cat.id}>
+                  <CategoryTile category={cat} />
+                </CarouselItem>
+              ))}
+            </Carousel>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              {categories.slice(0, CATEGORY_SLIDE_THRESHOLD).map((cat) => (
+                <CategoryTile key={cat.id} category={cat} />
+              ))}
+            </div>
+          )}
         </Section>
       )}
 
@@ -203,8 +240,8 @@ export function HomePage() {
 
       <section className="relative overflow-hidden bg-gradient-to-b from-ink-950 via-brown-900/40 to-ink-950 py-16">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,175,55,0.1),transparent_60%)]" />
-        <div className="relative mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
-          {stats.map(({ icon: Icon, value, decimals, suffix, label }, index) => (
+        <div className="relative mx-auto grid max-w-md grid-cols-2 gap-8 px-4 sm:px-6 lg:px-8">
+          {stats.map(({ icon: Icon, value, label }, index) => (
             <motion.div
               key={label}
               initial={{ opacity: 0, scale: 0.85 }}
@@ -215,7 +252,7 @@ export function HomePage() {
             >
               <Icon className="text-gold-500" size={22} />
               <p className="font-display text-3xl font-bold text-gradient-gold sm:text-4xl">
-                <CountUp value={value} decimals={decimals} suffix={suffix} startOnView />
+                <CountUp value={value} suffix="+" startOnView />
               </p>
               <p className="text-xs uppercase tracking-wider text-cream-200/50">{label}</p>
             </motion.div>

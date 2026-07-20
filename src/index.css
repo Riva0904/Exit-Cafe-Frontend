@@ -89,6 +89,23 @@ body {
   border: 1px solid color-mix(in srgb, var(--color-gold-600) 25%, transparent);
 }
 
+.map-embed {
+  filter: invert(92%) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+
+:root[data-theme="light"] .map-embed {
+  filter: none;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .text-gradient-gold {
   background: linear-gradient(120deg, var(--color-gold-300), var(--color-gold-500) 45%, var(--color-gold-600));
   -webkit-background-clip: text;

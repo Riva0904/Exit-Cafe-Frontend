@@ -11,19 +11,28 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { OrderType, PaymentMethod } from '@/types/order';
 
-const checkoutSchema = z.object({
-  guestFirstName: z.string().min(1, 'First name is required'),
-  guestLastName: z.string().min(1, 'Last name is required'),
-  guestEmail: z.string().email('Enter a valid email'),
-  guestPhone: z.string().min(8, 'Enter a valid phone number'),
-  orderType: z.enum(['delivery', 'pickup']),
-  addressLine1: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  postalCode: z.string().optional(),
-  paymentMethod: z.enum(['cod', 'card', 'upi']),
-  notes: z.string().optional(),
-});
+const checkoutSchema = z
+  .object({
+    fullName: z.string().min(1, 'Name is required'),
+    guestEmail: z.string().email('Enter a valid email'),
+    guestPhone: z.string().min(8, 'Enter a valid phone number'),
+    orderType: z.enum(['delivery', 'pickup']),
+    addressLine1: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    postalCode: z.string().optional(),
+    paymentMethod: z.enum(['cod', 'card', 'upi']),
+    notes: z.string().optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.orderType !== 'delivery') return;
+    if (!values.addressLine1?.trim())
+      ctx.addIssue({ code: 'custom', path: ['addressLine1'], message: 'Address is required for delivery' });
+    if (!values.city?.trim()) ctx.addIssue({ code: 'custom', path: ['city'], message: 'City is required' });
+    if (!values.state?.trim()) ctx.addIssue({ code: 'custom', path: ['state'], message: 'State is required' });
+    if (!values.postalCode?.trim())
+      ctx.addIssue({ code: 'custom', path: ['postalCode'], message: 'Postal code is required' });
+  });
 
 type CheckoutForm = z.infer<typeof checkoutSchema>;
 
@@ -49,8 +58,7 @@ export function CheckoutPage() {
     defaultValues: {
       orderType: 'delivery',
       paymentMethod: 'cod',
-      guestFirstName: user?.firstName ?? '',
-      guestLastName: user?.lastName ?? '',
+      fullName: user ? `${user.firstName} ${user.lastName}`.trim() : '',
       guestEmail: user?.email ?? '',
     },
   });
@@ -62,17 +70,23 @@ export function CheckoutPage() {
   const total = subTotal + deliveryFee + tax;
 
   const placeOrder = useMutation({
-    mutationFn: (values: CheckoutForm) =>
-      ordersApi.create({
-        guestFirstName: values.guestFirstName,
-        guestLastName: values.guestLastName,
+    mutationFn: (values: CheckoutForm) => {
+      const [guestFirstName, ...rest] = values.fullName.trim().split(/\s+/);
+      return ordersApi.create({
+        guestFirstName,
+        guestLastName: rest.join(' ') || guestFirstName,
         guestEmail: values.guestEmail,
         guestPhone: values.guestPhone,
         orderType: values.orderType === 'delivery' ? OrderType.Delivery : OrderType.Pickup,
+        deliveryAddressLine1: values.orderType === 'delivery' ? values.addressLine1 : undefined,
+        deliveryCity: values.orderType === 'delivery' ? values.city : undefined,
+        deliveryState: values.orderType === 'delivery' ? values.state : undefined,
+        deliveryPostalCode: values.orderType === 'delivery' ? values.postalCode : undefined,
         paymentMethod: paymentMethodMap[values.paymentMethod],
         notes: values.notes,
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-      }),
+      });
+    },
     onSuccess: (order) => {
       dispatch(clearCart());
       toast.success('Order placed successfully!');
@@ -96,9 +110,11 @@ export function CheckoutPage() {
         <div className="space-y-6 lg:col-span-2">
           <div className="rounded-2xl border border-white/10 bg-ink-900/40 p-6">
             <h2 className="font-display mb-4 text-lg font-semibold text-cream-100">Contact Details</h2>
+            <p className="mb-4 text-xs text-cream-200/50">
+              No account needed — just your name, email and phone so we can reach you about the order.
+            </p>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="First name" {...register('guestFirstName')} error={errors.guestFirstName?.message} />
-              <Input label="Last name" {...register('guestLastName')} error={errors.guestLastName?.message} />
+              <Input label="Full name" className="sm:col-span-2" {...register('fullName')} error={errors.fullName?.message} />
               <Input label="Email" type="email" {...register('guestEmail')} error={errors.guestEmail?.message} />
               <Input label="Phone" {...register('guestPhone')} error={errors.guestPhone?.message} />
             </div>
@@ -117,10 +133,10 @@ export function CheckoutPage() {
 
             {orderType === 'delivery' && (
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <Input label="Address" className="sm:col-span-2" {...register('addressLine1')} />
-                <Input label="City" {...register('city')} />
-                <Input label="State" {...register('state')} />
-                <Input label="Postal code" {...register('postalCode')} />
+                <Input label="Address" className="sm:col-span-2" {...register('addressLine1')} error={errors.addressLine1?.message} />
+                <Input label="City" {...register('city')} error={errors.city?.message} />
+                <Input label="State" {...register('state')} error={errors.state?.message} />
+                <Input label="Postal code" {...register('postalCode')} error={errors.postalCode?.message} />
               </div>
             )}
           </div>
