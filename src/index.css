@@ -1,0 +1,97 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300..800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink-950: #08070a;
+  --color-ink-900: #0d0b0f;
+  --color-ink-800: #14111a;
+  --color-ink-700: #1e1922;
+  --color-ink-600: #2a2330;
+
+  --color-brown-900: #1c130d;
+  --color-brown-800: #2a1c12;
+  --color-brown-700: #3c281a;
+
+  --color-gold-300: #f0dc9a;
+  --color-gold-400: #e6c569;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #b3902a;
+  --color-gold-700: #8f7220;
+
+  --color-cream-50: #fbf8f2;
+  --color-cream-100: #f5efe2;
+  --color-cream-200: #ece1cc;
+
+  --shadow-gold-glow: 0 0 40px -8px rgba(212, 175, 55, 0.35);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-ink-950);
+  color: var(--color-cream-100);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+:root[data-theme="light"] body {
+  background-color: var(--color-cream-50);
+  color: var(--color-ink-900);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background-color: var(--color-gold-500);
+  color: var(--color-ink-950);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-ink-900);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gold-700);
+  border-radius: 999px;
+}
+
+.glass-panel {
+  background: color-mix(in srgb, var(--color-ink-800) 60%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--color-gold-500) 15%, transparent);
+}
+
+:root[data-theme="light"] .glass-panel {
+  background: color-mix(in srgb, var(--color-cream-50) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-gold-600) 25%, transparent);
+}
+
+.text-gradient-gold {
+  background: linear-gradient(120deg, var(--color-gold-300), var(--color-gold-500) 45%, var(--color-gold-600));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
