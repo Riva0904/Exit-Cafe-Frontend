@@ -7,6 +7,8 @@ export const categoriesApi = {
     unwrap(apiClient.get<ApiResponse<Category[]>>('/categories', { params: { includeInactive } })),
   getById: (id: string) => unwrap(apiClient.get<ApiResponse<Category>>(`/categories/${id}`)),
   getBySlug: (slug: string) => unwrap(apiClient.get<ApiResponse<Category>>(`/categories/slug/${slug}`)),
+  getProducts: (slug: string, params?: Omit<ProductQueryParams, 'categoryId'>) =>
+    unwrap(apiClient.get<ApiResponse<PagedResult<ProductListItem>>>(`/categories/${slug}/products`, { params })),
   create: (payload: Partial<Category>) => unwrap(apiClient.post<ApiResponse<Category>>('/categories', payload)),
   update: (id: string, payload: Partial<Category>) =>
     unwrap(apiClient.put<ApiResponse<Category>>(`/categories/${id}`, payload)),
