@@ -109,9 +109,15 @@ export function HomePage() {
                 to={`/menu?category=${cat.id}`}
                 className="group flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-ink-900/40 p-5 text-center transition-colors hover:border-gold-500/40"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-500/10 text-gold-400 group-hover:bg-gold-500/20">
-                  {cat.name.charAt(0)}
-                </div>
+                {cat.imageUrl ? (
+                  <div className="h-14 w-14 overflow-hidden rounded-full ring-2 ring-transparent transition-all group-hover:ring-gold-500/50">
+                    <img src={cat.imageUrl} alt="" className="h-full w-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-500/10 text-gold-400 group-hover:bg-gold-500/20">
+                    {cat.name.charAt(0)}
+                  </div>
+                )}
                 <span className="text-sm font-medium text-cream-200/80 group-hover:text-gold-400">
                   {cat.name}
                 </span>
