@@ -69,6 +69,7 @@ export function AdminProductsPage() {
       stockQuantity: product.stockQuantity,
       shortDescription: product.shortDescription ?? '',
       description: product.description ?? '',
+      imageUrls: product.images.map((img) => img.imageUrl).join(', '),
       isAvailable: product.isAvailable,
       isFeatured: product.isFeatured,
       isBestSeller: product.isBestSeller,
@@ -79,12 +80,16 @@ export function AdminProductsPage() {
   }
 
   const save = useMutation({
-    mutationFn: (values: FormValues) => {
+    mutationFn: async (values: FormValues) => {
       const imageUrls = values.imageUrls?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
       const { imageUrls: _omit, ...rest } = values;
-      return editing
-        ? productsApi.update(editing.id, rest)
-        : productsApi.create({ ...rest, ingredients: undefined, nutritionInfo: undefined, imageUrls });
+
+      if (editing) {
+        const result = await productsApi.update(editing.id, rest);
+        if (imageUrls.length > 0) await productsApi.updateImages(editing.id, imageUrls);
+        return result;
+      }
+      return productsApi.create({ ...rest, ingredients: undefined, nutritionInfo: undefined, imageUrls });
     },
     onSuccess: () => {
       toast.success(editing ? 'Product updated' : 'Product created');
@@ -184,7 +189,7 @@ export function AdminProductsPage() {
           </div>
 
           <Input label="Short Description" {...register('shortDescription')} />
-          {!editing && <Input label="Image URLs (comma-separated)" {...register('imageUrls')} />}
+          <Input label="Image URLs (comma-separated)" {...register('imageUrls')} />
 
           <div className="grid grid-cols-2 gap-2 text-sm text-cream-200/80">
             <label className="flex items-center gap-2"><input type="checkbox" {...register('isAvailable')} /> Available</label>

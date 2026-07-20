@@ -26,5 +26,7 @@ export const productsApi = {
     unwrap(apiClient.post<ApiResponse<Product>>('/products', payload)),
   update: (id: string, payload: Record<string, unknown>) =>
     unwrap(apiClient.put<ApiResponse<Product>>(`/products/${id}`, payload)),
+  updateImages: (id: string, imageUrls: string[]) =>
+    unwrap(apiClient.put<ApiResponse<Product>>(`/products/${id}/images`, { imageUrls })),
   remove: (id: string) => apiClient.delete(`/products/${id}`),
 };
