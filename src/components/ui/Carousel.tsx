@@ -37,7 +37,7 @@ export function Carousel({ children }: { children: ReactNode }) {
     <div className="group/carousel relative">
       <div
         ref={trackRef}
-        className="scrollbar-none flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-2"
+        className="carousel-fade scrollbar-none flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth pb-2"
       >
         {children}
       </div>

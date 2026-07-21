@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fi';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { logout } from '@/features/auth/authSlice';
+import { useSessionIdentityGuard } from '@/hooks/useSessionIdentityGuard';
 import { NotificationBell } from './NotificationBell';
 
 const links = [
@@ -25,6 +26,8 @@ const staffRoles = new Set(['SuperAdmin', 'Admin', 'Manager', 'Staff']);
 export function AdminLayout() {
   const dispatch = useAppDispatch();
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
+
+  useSessionIdentityGuard(user?.userId);
 
   if (!isAuthenticated || !user || !staffRoles.has(user.role)) {
     return <Navigate to="/admin/login" replace />;

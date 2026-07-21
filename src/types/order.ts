@@ -67,11 +67,6 @@ export interface OrderItemRequest {
 }
 
 export interface CreateOrderRequest {
-  customerId?: string;
-  guestFirstName?: string;
-  guestLastName?: string;
-  guestEmail?: string;
-  guestPhone?: string;
   orderType: number;
   deliveryAddressId?: string;
   deliveryAddressLine1?: string;

@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { FiCheck, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { ordersApi } from '@/api/orders';
+import { reviewsApi } from '@/api/reviews';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
+import { StarRatingInput } from '@/components/ui/StarRatingInput';
 import { OrderStatus, OrderStatusLabels, type OrderStatusValue } from '@/types/order';
+import type { OrderItem } from '@/types/order';
+import { getErrorMessage } from '@/utils/errors';
 
 const activeSteps: OrderStatusValue[] = [
   OrderStatus.Pending,
@@ -62,6 +68,70 @@ function StatusTimeline({ status }: { status: OrderStatusValue }) {
   );
 }
 
+function RateItemRow({ item, orderId }: { item: OrderItem; orderId: string }) {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const queryClient = useQueryClient();
+
+  const submit = useMutation({
+    mutationFn: () => reviewsApi.create({ productId: item.productId, orderId, rating, comment: comment || undefined }),
+    onSuccess: () => {
+      toast.success('Thanks for rating!');
+      queryClient.invalidateQueries({ queryKey: ['order-reviews', orderId] });
+    },
+    onError: (err) => toast.error(getErrorMessage(err, 'Could not submit rating')),
+  });
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+      <p className="text-sm font-medium text-cream-100">{item.productName}</p>
+      <div className="mt-2 flex items-center gap-4">
+        <StarRatingInput value={rating} onChange={setRating} />
+        <Button size="sm" onClick={() => submit.mutate()} isLoading={submit.isPending} disabled={rating === 0}>
+          Submit
+        </Button>
+      </div>
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Say something about this item (optional)"
+        rows={2}
+        className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-cream-100 placeholder:text-cream-200/30 focus:border-gold-500/60 focus:outline-none"
+      />
+    </div>
+  );
+}
+
+function RateOrderSection({ orderId, items }: { orderId: string; items: OrderItem[] }) {
+  const { data: reviewedProductIds } = useQuery({
+    queryKey: ['order-reviews', orderId],
+    queryFn: () => reviewsApi.getOrderReviews(orderId),
+  });
+
+  const unrated = items.filter((item) => !reviewedProductIds?.includes(item.productId));
+  const rated = items.filter((item) => reviewedProductIds?.includes(item.productId));
+
+  if (!reviewedProductIds) return null;
+
+  return (
+    <div className="mt-6 rounded-2xl border border-gold-500/20 bg-gold-500/5 p-6 text-left">
+      <h2 className="font-display text-lg font-semibold text-cream-100">Rate your order</h2>
+      <p className="mt-1 text-xs text-cream-200/50">Let us know how each item was.</p>
+
+      <div className="mt-4 space-y-3">
+        {unrated.map((item) => (
+          <RateItemRow key={item.id} item={item} orderId={orderId} />
+        ))}
+        {rated.map((item) => (
+          <div key={item.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-cream-200/60">
+            <FiCheck className="text-emerald-400" /> {item.productName} — rated, thank you!
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function OrderConfirmationPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -78,21 +148,36 @@ export function OrderConfirmationPage() {
   if (isLoading) return <PageSpinner />;
   if (!order) return <p className="py-24 text-center text-cream-200/50">Order not found.</p>;
 
+  const status = order.status as OrderStatusValue;
+  const isTerminal = terminalStatuses.has(status);
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
-      <FiCheckCircle size={56} className="mx-auto text-gold-500" />
-      <h1 className="font-display mt-6 text-3xl font-bold text-cream-100">Thank you for your order!</h1>
+      {status === OrderStatus.Cancelled ? (
+        <FiXCircle size={56} className="mx-auto text-red-400" />
+      ) : (
+        <FiCheckCircle size={56} className="mx-auto text-gold-500" />
+      )}
+      <h1 className="font-display mt-6 text-3xl font-bold text-cream-100">
+        {status === OrderStatus.Cancelled
+          ? 'Order Cancelled'
+          : status === OrderStatus.Delivered
+            ? 'Order Delivered'
+            : 'Thank you for your order!'}
+      </h1>
       <p className="mt-2 text-cream-200/60">
-        Order <span className="font-medium text-gold-400">{order.orderNumber}</span> has been placed and is{' '}
-        {OrderStatusLabels[order.status as OrderStatusValue].toLowerCase()}.
+        Order <span className="font-medium text-gold-400">{order.orderNumber}</span> is{' '}
+        {OrderStatusLabels[status].toLowerCase()}.
       </p>
 
       <div className="mt-8 rounded-2xl border border-white/10 bg-ink-900/40 p-6">
-        <StatusTimeline status={order.status} />
+        <StatusTimeline status={status} />
       </div>
-      <p className="mt-2 text-xs text-cream-200/40">
-        This page updates automatically as the kitchen updates your order.
-      </p>
+      {!isTerminal && (
+        <p className="mt-2 text-xs text-cream-200/40">
+          This page updates automatically as the kitchen updates your order.
+        </p>
+      )}
 
       <div className="mt-6 rounded-2xl border border-white/10 bg-ink-900/40 p-6 text-left">
         <ul className="space-y-2 text-sm text-cream-200/70">
@@ -108,6 +193,8 @@ export function OrderConfirmationPage() {
           <span>₹{order.totalAmount.toFixed(0)}</span>
         </div>
       </div>
+
+      {status === OrderStatus.Delivered && <RateOrderSection orderId={order.id} items={order.items} />}
 
       <Link to="/menu" className="mt-8 inline-block">
         <Button>Continue Shopping</Button>

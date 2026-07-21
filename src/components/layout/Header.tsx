@@ -1,10 +1,63 @@
 import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { FiMenu, FiMoon, FiShoppingBag, FiSun, FiUser, FiX } from 'react-icons/fi';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { FiClock, FiLogOut, FiMenu, FiMoon, FiShoppingBag, FiSun, FiUser, FiX } from 'react-icons/fi';
 import clsx from 'clsx';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { toggleTheme } from '@/app/uiSlice';
 import { logout } from '@/features/auth/authSlice';
+import { CustomerNotificationBell } from './CustomerNotificationBell';
+
+function AccountMenu({ firstName }: { firstName?: string }) {
+  const [open, setOpen] = useState(false);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  return (
+    <div className="relative hidden sm:block">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 rounded-full p-2 text-sm text-cream-200/80 transition-colors hover:bg-white/5 hover:text-gold-400"
+      >
+        <FiUser size={16} /> {firstName}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-white/10 bg-ink-900 shadow-xl"
+            >
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  navigate('/orders');
+                }}
+                className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm text-cream-200/80 transition-colors hover:bg-white/5 hover:text-gold-400"
+              >
+                <FiClock size={15} /> Order History
+              </button>
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  dispatch(logout());
+                }}
+                className="flex w-full items-center gap-2.5 border-t border-white/5 px-4 py-3 text-left text-sm text-cream-200/80 transition-colors hover:bg-red-500/10 hover:text-red-400"
+              >
+                <FiLogOut size={15} /> Sign out
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -67,13 +120,10 @@ export function Header() {
           </Link>
 
           {isAuthenticated ? (
-            <button
-              onClick={() => dispatch(logout())}
-              className="hidden items-center gap-1.5 rounded-full p-2 text-sm text-cream-200/80 transition-colors hover:bg-white/5 hover:text-gold-400 sm:flex"
-              title={`Sign out (${user?.firstName})`}
-            >
-              <FiUser size={16} /> {user?.firstName}
-            </button>
+            <>
+              <CustomerNotificationBell />
+              <AccountMenu firstName={user?.firstName} />
+            </>
           ) : (
             <Link
               to="/login"
@@ -105,7 +155,26 @@ export function Header() {
               {link.label}
             </NavLink>
           ))}
-          {!isAuthenticated && (
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/orders"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-cream-200/80 hover:bg-white/5 hover:text-gold-400"
+              >
+                Order History
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileOpen(false);
+                  dispatch(logout());
+                }}
+                className="rounded-lg px-3 py-2 text-left text-sm font-medium text-cream-200/80 hover:bg-white/5 hover:text-red-400"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
             <Link
               to="/login"
               onClick={() => setMobileOpen(false)}

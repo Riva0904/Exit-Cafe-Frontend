@@ -10,12 +10,13 @@ import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
+import { ImagePicker } from '@/components/admin/ImagePicker';
 import type { Category } from '@/types/catalog';
+import { getErrorMessage } from '@/utils/errors';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  imageUrl: z.string().optional(),
   displayOrder: z.coerce.number().min(0),
 });
 type FormValues = z.infer<typeof schema>;
@@ -24,6 +25,7 @@ export function AdminCategoriesPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Category | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ['admin', 'categories'],
@@ -32,37 +34,40 @@ export function AdminCategoriesPage() {
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema) as Resolver<FormValues>,
-    defaultValues: { name: '', description: '', imageUrl: '', displayOrder: 0 },
+    defaultValues: { name: '', description: '', displayOrder: 0 },
   });
 
   function openCreate() {
     setEditing(null);
-    reset({ name: '', description: '', imageUrl: '', displayOrder: 0 });
+    setImageUrls([]);
+    reset({ name: '', description: '', displayOrder: 0 });
     setModalOpen(true);
   }
 
   function openEdit(category: Category) {
     setEditing(category);
+    setImageUrls(category.imageUrl ? [category.imageUrl] : []);
     reset({
       name: category.name,
       description: category.description ?? '',
-      imageUrl: category.imageUrl ?? '',
       displayOrder: category.displayOrder,
     });
     setModalOpen(true);
   }
 
   const save = useMutation({
-    mutationFn: (values: FormValues) =>
-      editing
-        ? categoriesApi.update(editing.id, { ...values, isActive: editing.isActive })
-        : categoriesApi.create(values),
+    mutationFn: (values: FormValues) => {
+      const payload = { ...values, imageUrl: imageUrls[0] };
+      return editing
+        ? categoriesApi.update(editing.id, { ...payload, isActive: editing.isActive })
+        : categoriesApi.create(payload);
+    },
     onSuccess: () => {
       toast.success(editing ? 'Category updated' : 'Category created');
       queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
       setModalOpen(false);
     },
-    onError: () => toast.error('Something went wrong'),
+    onError: (err) => toast.error(getErrorMessage(err, 'Something went wrong')),
   });
 
   const remove = useMutation({
@@ -71,6 +76,7 @@ export function AdminCategoriesPage() {
       toast.success('Category deleted');
       queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
     },
+    onError: (err) => toast.error(getErrorMessage(err, 'Could not delete category')),
   });
 
   if (isLoading) return <PageSpinner />;
@@ -123,7 +129,14 @@ export function AdminCategoriesPage() {
         <form onSubmit={handleSubmit((v) => save.mutate(v))} className="space-y-4">
           <Input label="Name" {...register('name')} error={errors.name?.message} />
           <Input label="Description" {...register('description')} />
-          <Input label="Image URL" {...register('imageUrl')} />
+          <ImagePicker
+            value={imageUrls}
+            onChange={setImageUrls}
+            subfolder="categories"
+            multiple={false}
+            shape="circle"
+            label="Category Image"
+          />
           <Input label="Display Order" type="number" {...register('displayOrder')} error={errors.displayOrder?.message} />
           <Button type="submit" className="w-full" isLoading={save.isPending}>
             Save

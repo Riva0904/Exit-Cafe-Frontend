@@ -28,6 +28,7 @@ export interface ProductListItem {
   isFeatured: boolean;
   isBestSeller: boolean;
   isNewArrival: boolean;
+  isTodaysSpecial: boolean;
   averageRating: number;
   reviewCount: number;
   stockQuantity: number;

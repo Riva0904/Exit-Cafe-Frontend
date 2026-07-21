@@ -16,8 +16,9 @@ export function ProductCard({ product }: { product: ProductListItem }) {
     <motion.div
       whileHover={{ y: -6 }}
       transition={{ duration: 0.25 }}
-      className="group overflow-hidden rounded-2xl border border-white/10 bg-ink-900/40"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-ink-900/40 transition-all duration-300 hover:border-gold-500/40 hover:shadow-gold-glow"
     >
+      <span className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-b from-gold-500/0 via-gold-500/0 to-gold-500/0 opacity-0 transition-opacity duration-300 group-hover:from-gold-500/10 group-hover:opacity-100" />
       <Link to={`/menu/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-ink-800">
           {product.primaryImageUrl ? (
@@ -31,7 +32,11 @@ export function ProductCard({ product }: { product: ProductListItem }) {
           )}
 
           <div className="absolute left-3 top-3 flex flex-col gap-1.5">
-            {product.isBestSeller && <Badge tone="gold">Best Seller</Badge>}
+            {product.isBestSeller && (
+              <Badge tone="gold" className="glow-pulse">
+                Best Seller
+              </Badge>
+            )}
             {product.isNewArrival && <Badge tone="success">New</Badge>}
           </div>
         </div>

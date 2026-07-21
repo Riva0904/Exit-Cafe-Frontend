@@ -18,6 +18,7 @@ import { PageSpinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { CountUp } from '@/components/ui/CountUp';
 import { Carousel, CarouselItem } from '@/components/ui/Carousel';
+import { PagedGrid } from '@/components/ui/PagedGrid';
 
 function Section({
   title,
@@ -29,18 +30,25 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mb-10 text-center">
+    <section className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[36rem] -translate-x-1/2 rounded-full bg-gold-500/[0.06] blur-3xl" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative mb-10 text-center"
+      >
         <h2 className="font-display text-3xl font-bold text-cream-100 sm:text-4xl">{title}</h2>
-        {subtitle && <p className="mt-2 text-cream-200/60">{subtitle}</p>}
-      </div>
-      {children}
+        <span className="mx-auto mt-3 block h-px w-16 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
+        {subtitle && <p className="mt-3 text-cream-200/60">{subtitle}</p>}
+      </motion.div>
+      <div className="relative">{children}</div>
     </section>
   );
 }
 
 const PRODUCT_SLIDE_THRESHOLD = 8;
-const CATEGORY_SLIDE_THRESHOLD = 12;
 
 function CategoryTile({ category }: { category: import('@/types/catalog').Category }) {
   return (
@@ -65,7 +73,15 @@ function CategoryTile({ category }: { category: import('@/types/catalog').Catego
   );
 }
 
-function ProductGrid({ queryKey, fetcher }: { queryKey: string; fetcher: () => Promise<unknown> }) {
+function ProductGrid({
+  queryKey,
+  fetcher,
+  variant = 'auto',
+}: {
+  queryKey: string;
+  fetcher: () => Promise<unknown>;
+  variant?: 'auto' | 'grid';
+}) {
   const { data, isLoading } = useQuery({
     queryKey: [queryKey],
     queryFn: fetcher as () => Promise<import('@/types/catalog').ProductListItem[]>,
@@ -74,7 +90,7 @@ function ProductGrid({ queryKey, fetcher }: { queryKey: string; fetcher: () => P
   if (isLoading) return <PageSpinner />;
   if (!data || data.length === 0) return <p className="text-center text-cream-200/50">Nothing here yet.</p>;
 
-  if (data.length >= PRODUCT_SLIDE_THRESHOLD) {
+  if (variant === 'auto' && data.length >= PRODUCT_SLIDE_THRESHOLD) {
     return (
       <Carousel>
         {data.map((product) => (
@@ -86,13 +102,7 @@ function ProductGrid({ queryKey, fetcher }: { queryKey: string; fetcher: () => P
     );
   }
 
-  return (
-    <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-      {data.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
-  );
+  return <PagedGrid items={data} keyOf={(p) => p.id} renderItem={(p) => <ProductCard product={p} />} />;
 }
 
 const whyChooseUs = [
@@ -167,30 +177,16 @@ export function HomePage() {
       </section>
 
       <Section title="Today's Special" subtitle="Fresh picks, hand-selected daily by our chefs">
-        <ProductGrid queryKey="todays-special" fetcher={productsApi.getTodaysSpecial} />
+        <ProductGrid queryKey="todays-special" fetcher={productsApi.getTodaysSpecial} variant="grid" />
       </Section>
 
       <Section title="Best Sellers" subtitle="Loved by our customers, again and again">
-        <ProductGrid queryKey="best-sellers" fetcher={productsApi.getBestSellers} />
+        <ProductGrid queryKey="best-sellers" fetcher={productsApi.getBestSellers} variant="grid" />
       </Section>
 
       {categories && categories.length > 0 && (
         <Section title="Shop by Category">
-          {categories.length > CATEGORY_SLIDE_THRESHOLD ? (
-            <Carousel>
-              {categories.map((cat) => (
-                <CarouselItem key={cat.id}>
-                  <CategoryTile category={cat} />
-                </CarouselItem>
-              ))}
-            </Carousel>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {categories.slice(0, CATEGORY_SLIDE_THRESHOLD).map((cat) => (
-                <CategoryTile key={cat.id} category={cat} />
-              ))}
-            </div>
-          )}
+          <PagedGrid items={categories} keyOf={(c) => c.id} renderItem={(c) => <CategoryTile category={c} />} />
         </Section>
       )}
 

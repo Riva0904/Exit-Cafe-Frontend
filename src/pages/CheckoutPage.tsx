@@ -1,22 +1,22 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { FiAlertTriangle, FiLock } from 'react-icons/fi';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { logout } from '@/features/auth/authSlice';
 import { clearCart } from '@/features/cart/cartSlice';
 import { ordersApi } from '@/api/orders';
 import { customersApi } from '@/api/customers';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { OrderType, PaymentMethod } from '@/types/order';
+import { getErrorMessage } from '@/utils/errors';
 
 const checkoutSchema = z
   .object({
-    fullName: z.string().min(1, 'Name is required'),
-    guestEmail: z.string().email('Enter a valid email'),
-    guestPhone: z.string().min(8, 'Enter a valid phone number'),
     orderType: z.enum(['delivery', 'pickup']),
     addressLine1: z.string().optional(),
     city: z.string().optional(),
@@ -45,15 +45,20 @@ const paymentMethodMap: Record<CheckoutForm['paymentMethod'], number> = {
 
 export function CheckoutPage() {
   const items = useAppSelector((s) => s.cart.items);
-  const user = useAppSelector((s) => s.auth.user);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { data: myCustomer } = useQuery({
+  const {
+    data: myCustomer,
+    isLoading: isCustomerLoading,
+    isError: isCustomerError,
+    error: customerError,
+  } = useQuery({
     queryKey: ['customers', 'me'],
     queryFn: customersApi.getMe,
     enabled: isAuthenticated,
+    retry: 1,
   });
 
   const {
@@ -66,8 +71,6 @@ export function CheckoutPage() {
     defaultValues: {
       orderType: 'delivery',
       paymentMethod: 'cod',
-      fullName: user ? `${user.firstName} ${user.lastName}`.trim() : '',
-      guestEmail: user?.email ?? '',
     },
   });
 
@@ -78,14 +81,8 @@ export function CheckoutPage() {
   const total = subTotal + deliveryFee + tax;
 
   const placeOrder = useMutation({
-    mutationFn: (values: CheckoutForm) => {
-      const [guestFirstName, ...rest] = values.fullName.trim().split(/\s+/);
-      return ordersApi.create({
-        customerId: myCustomer?.id,
-        guestFirstName: myCustomer ? undefined : guestFirstName,
-        guestLastName: myCustomer ? undefined : rest.join(' ') || guestFirstName,
-        guestEmail: myCustomer ? undefined : values.guestEmail,
-        guestPhone: myCustomer ? undefined : values.guestPhone,
+    mutationFn: (values: CheckoutForm) =>
+      ordersApi.create({
         orderType: values.orderType === 'delivery' ? OrderType.Delivery : OrderType.Pickup,
         deliveryAddressLine1: values.orderType === 'delivery' ? values.addressLine1 : undefined,
         deliveryCity: values.orderType === 'delivery' ? values.city : undefined,
@@ -94,15 +91,34 @@ export function CheckoutPage() {
         paymentMethod: paymentMethodMap[values.paymentMethod],
         notes: values.notes,
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-      });
-    },
+      }),
     onSuccess: (order) => {
       dispatch(clearCart());
       toast.success('Order placed successfully!');
       navigate(`/orders/${order.id}/confirmation`);
     },
-    onError: () => toast.error('Could not place order. Please try again.'),
+    onError: (err) => toast.error(getErrorMessage(err, 'Could not place order. Please try again.')),
   });
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-24 text-center">
+        <FiLock size={40} className="text-cream-200/20" />
+        <h2 className="font-display mt-6 text-xl font-bold text-cream-100">Sign in to place an order</h2>
+        <p className="mt-2 text-cream-200/60">
+          Create an account or sign in so we can attach this order to you and keep you updated on it.
+        </p>
+        <div className="mt-6 flex gap-3">
+          <Link to="/login">
+            <Button>Sign In</Button>
+          </Link>
+          <Link to="/register">
+            <Button variant="outline">Create Account</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return <p className="py-24 text-center text-cream-200/50">Your cart is empty.</p>;
@@ -119,14 +135,49 @@ export function CheckoutPage() {
         <div className="space-y-6 lg:col-span-2">
           <div className="rounded-2xl border border-white/10 bg-ink-900/40 p-6">
             <h2 className="font-display mb-4 text-lg font-semibold text-cream-100">Contact Details</h2>
-            <p className="mb-4 text-xs text-cream-200/50">
-              No account needed — just your name, email and phone so we can reach you about the order.
+            {isCustomerError ? (
+              <div className="flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+                <FiAlertTriangle className="mt-0.5 shrink-0 text-red-400" />
+                <div>
+                  <p className="text-sm text-red-400">{getErrorMessage(customerError, "Couldn't load your account details.")}</p>
+                  <p className="mt-1 text-xs text-cream-200/50">
+                    This usually means your session is stale — often from signing in as a different account in
+                    another tab.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => dispatch(logout())}
+                    className="mt-2 text-xs font-medium text-gold-400 hover:underline"
+                  >
+                    Sign out and sign in again
+                  </button>
+                </div>
+              </div>
+            ) : isCustomerLoading || !myCustomer ? (
+              <p className="text-sm text-cream-200/40">Loading your account details…</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-cream-200/40">Name</p>
+                  <p className="mt-0.5 text-sm text-cream-100">
+                    {`${myCustomer.firstName} ${myCustomer.lastName}`.trim()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-cream-200/40">Email</p>
+                  <p className="mt-0.5 text-sm text-cream-100">{myCustomer.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-cream-200/40">Phone</p>
+                  <p className="mt-0.5 text-sm text-cream-100">
+                    {myCustomer.phone || <span className="text-cream-200/40">Not set</span>}
+                  </p>
+                </div>
+              </div>
+            )}
+            <p className="mt-4 text-xs text-cream-200/40">
+              We'll use your account details for this order. Order updates go to the email above.
             </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Full name" className="sm:col-span-2" {...register('fullName')} error={errors.fullName?.message} />
-              <Input label="Email" type="email" {...register('guestEmail')} error={errors.guestEmail?.message} />
-              <Input label="Phone" {...register('guestPhone')} error={errors.guestPhone?.message} />
-            </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-ink-900/40 p-6">

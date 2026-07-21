@@ -31,7 +31,6 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm text-cream-200/60">
             <li><Link to="/menu" className="hover:text-gold-400">Menu</Link></li>
             <li><Link to="/about" className="hover:text-gold-400">About Us</Link></li>
-            <li><Link to="/catering" className="hover:text-gold-400">Catering Services</Link></li>
             <li><Link to="/gallery" className="hover:text-gold-400">Gallery</Link></li>
           </ul>
         </div>
@@ -41,7 +40,6 @@ export function Footer() {
             Company
           </h4>
           <ul className="mt-4 space-y-2 text-sm text-cream-200/60">
-            <li><Link to="/careers" className="hover:text-gold-400">Careers</Link></li>
             <li><Link to="/faq" className="hover:text-gold-400">FAQ</Link></li>
             <li><Link to="/privacy-policy" className="hover:text-gold-400">Privacy Policy</Link></li>
             <li><Link to="/terms" className="hover:text-gold-400">Terms &amp; Conditions</Link></li>
