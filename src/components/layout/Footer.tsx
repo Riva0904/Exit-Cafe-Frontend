@@ -4,8 +4,8 @@ import { FiFacebook, FiInstagram, FiMapPin, FiMail, FiPhone, FiTwitter } from 'r
 export function Footer() {
   return (
     <footer className="border-t border-white/10 bg-ink-900/60">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-        <div>
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:gap-10 lg:px-8">
+        <div className="col-span-2 lg:col-span-1">
           <span className="font-display text-2xl font-bold text-gradient-gold">Exit Caff</span>
           <p className="mt-3 text-sm leading-relaxed text-cream-200/60">
             Delight in every bite. Handcrafted cakes, pastries and coffee, baked fresh daily at TMJ Complex,
