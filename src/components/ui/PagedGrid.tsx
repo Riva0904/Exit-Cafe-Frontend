@@ -30,16 +30,22 @@ export function PagedGrid<T>({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -16 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className={clsx('grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4', gridClassName)}
+            className={clsx('flex flex-wrap justify-center gap-6', gridClassName)}
           >
             {visible.map((item) => (
-              <div key={keyOf(item)}>{renderItem(item)}</div>
+              <div
+                key={keyOf(item)}
+                className="w-[calc(50%-0.75rem)] shrink-0 grow-0 sm:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)]"
+              >
+                {renderItem(item)}
+              </div>
             ))}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {items.length > 0 && (
+      {/* Nothing to page through with 0-1 pages — arrows/dots would be dead controls. */}
+      {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-4">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
