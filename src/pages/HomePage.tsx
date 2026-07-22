@@ -80,7 +80,7 @@ function ProductGrid({
 }: {
   queryKey: string;
   fetcher: () => Promise<unknown>;
-  variant?: 'auto' | 'grid';
+  variant?: 'auto' | 'grid' | 'carousel';
 }) {
   const { data, isLoading } = useQuery({
     queryKey: [queryKey],
@@ -90,7 +90,9 @@ function ProductGrid({
   if (isLoading) return <PageSpinner />;
   if (!data || data.length === 0) return <p className="text-center text-cream-200/50">Nothing here yet.</p>;
 
-  if (variant === 'auto' && data.length >= PRODUCT_SLIDE_THRESHOLD) {
+  const useCarousel = variant === 'carousel' || (variant === 'auto' && data.length >= PRODUCT_SLIDE_THRESHOLD);
+
+  if (useCarousel) {
     return (
       <Carousel>
         {data.map((product) => (
@@ -177,11 +179,11 @@ export function HomePage() {
       </section>
 
       <Section title="Today's Special" subtitle="Fresh picks, hand-selected daily by our chefs">
-        <ProductGrid queryKey="todays-special" fetcher={productsApi.getTodaysSpecial} variant="grid" />
+        <ProductGrid queryKey="todays-special" fetcher={productsApi.getTodaysSpecial} variant="carousel" />
       </Section>
 
       <Section title="Best Sellers" subtitle="Loved by our customers, again and again">
-        <ProductGrid queryKey="best-sellers" fetcher={productsApi.getBestSellers} variant="grid" />
+        <ProductGrid queryKey="best-sellers" fetcher={productsApi.getBestSellers} variant="carousel" />
       </Section>
 
       {categories && categories.length > 0 && (
@@ -191,7 +193,7 @@ export function HomePage() {
       )}
 
       <Section title="New Arrivals" subtitle="Fresh off the oven this week">
-        <ProductGrid queryKey="new-arrivals" fetcher={productsApi.getNewArrivals} />
+        <ProductGrid queryKey="new-arrivals" fetcher={productsApi.getNewArrivals} variant="carousel" />
       </Section>
 
       <section className="relative overflow-hidden border-y border-white/10 bg-ink-900/40">
