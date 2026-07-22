@@ -12,6 +12,8 @@ import { PageSpinner } from '@/components/ui/Spinner';
 import { OrderStatus, OrderStatusLabels, type Order, type OrderStatusValue } from '@/types/order';
 import { getErrorMessage } from '@/utils/errors';
 
+const staffRoles = new Set(['SuperAdmin', 'Admin', 'Manager', 'Staff']);
+
 const activeStatuses = new Set<OrderStatusValue>([
   OrderStatus.Pending,
   OrderStatus.Confirmed,
@@ -73,6 +75,8 @@ function OrderCard({ order, onReorder, reordering }: { order: Order; onReorder: 
 
 export function OrderHistoryPage() {
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  const user = useAppSelector((s) => s.auth.user);
+  const isStaff = Boolean(user && staffRoles.has(user.role));
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -84,7 +88,7 @@ export function OrderHistoryPage() {
   } = useQuery({
     queryKey: ['orders', 'my'],
     queryFn: ordersApi.getMyOrders,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isStaff,
     refetchInterval: 15_000,
     retry: 1,
   });
@@ -136,6 +140,26 @@ export function OrderHistoryPage() {
         <Link to="/login" className="mt-6">
           <Button>Sign In</Button>
         </Link>
+      </div>
+    );
+  }
+
+  if (isStaff) {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-24 text-center">
+        <FiClock size={48} className="text-cream-200/20" />
+        <h2 className="font-display mt-6 text-xl font-bold text-cream-100">No order history for staff accounts</h2>
+        <p className="mt-2 text-cream-200/60">
+          You're signed in as {user!.firstName} ({user!.role}). Staff accounts don't place customer orders, so
+          there's nothing to show here — sign in with a customer account instead.
+        </p>
+        <button
+          type="button"
+          onClick={() => dispatch(logout())}
+          className="mt-6 text-sm font-medium text-gold-400 hover:underline"
+        >
+          Sign out
+        </button>
       </div>
     );
   }
