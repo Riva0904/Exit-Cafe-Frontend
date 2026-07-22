@@ -198,7 +198,7 @@ export function AdminProductsPage() {
               <th className="p-4 font-medium">Price</th>
               <th className="p-4 font-medium">Stock</th>
               <th className="p-4 font-medium">Status</th>
-              <th className="p-4 font-medium">Best Seller</th>
+              <th className="p-4 font-medium">Most Selling</th>
               <th className="p-4 font-medium">Today's Special</th>
               <th className="p-4 font-medium">New Arrival</th>
               <th className="p-4 font-medium">Actions</th>
@@ -220,8 +220,8 @@ export function AdminProductsPage() {
                   <button
                     onClick={() => toggleFlag.mutate({ id: product.id, field: 'isBestSeller' })}
                     disabled={toggleFlag.isPending}
-                    aria-label="Toggle Best Seller"
-                    title="Toggle Best Seller"
+                    aria-label="Toggle Most Selling"
+                    title="Toggle Most Selling"
                     className={product.isBestSeller ? 'text-gold-400' : 'text-cream-200/30 hover:text-gold-400'}
                   >
                     <FiStar size={16} fill={product.isBestSeller ? 'currentColor' : 'none'} />

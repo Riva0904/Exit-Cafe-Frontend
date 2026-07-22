@@ -138,10 +138,7 @@ export function HomePage() {
   return (
     <div>
       <section className="relative flex min-h-[95vh] items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-fixed"
-          style={{ backgroundImage: "url('/hero-storefront.png')" }}
-        />
+        <div className="hero-bg absolute inset-0 bg-cover bg-center bg-fixed" />
         <div className="absolute inset-0 bg-gradient-to-b from-ink-950/60 via-ink-950/50 to-ink-950" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(212,175,55,0.12),transparent_65%)]" />
         <motion.div
@@ -182,7 +179,7 @@ export function HomePage() {
         <ProductGrid queryKey="todays-special" fetcher={productsApi.getTodaysSpecial} variant="carousel" />
       </Section>
 
-      <Section title="Best Sellers" subtitle="Loved by our customers, again and again">
+      <Section title="Most Selling" subtitle="Loved by our customers, again and again">
         <ProductGrid queryKey="best-sellers" fetcher={productsApi.getBestSellers} variant="carousel" />
       </Section>
 

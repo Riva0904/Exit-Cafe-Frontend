@@ -11,6 +11,9 @@ import { store } from './app/store';
 import { queryClient } from './app/queryClient';
 import { ThemeSync } from './app/ThemeSync';
 import { AuthEventListener } from './app/AuthEventListener';
+import { subscribeQueryCacheToAuth } from './app/queryCacheAuthSync';
+
+subscribeQueryCacheToAuth(store, queryClient);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

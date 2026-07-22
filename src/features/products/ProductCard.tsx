@@ -34,7 +34,7 @@ export function ProductCard({ product }: { product: ProductListItem }) {
           <div className="absolute left-3 top-3 flex flex-col gap-1.5">
             {product.isBestSeller && (
               <Badge tone="gold" className="glow-pulse">
-                Best Seller
+                Most Selling
               </Badge>
             )}
             {product.isNewArrival && <Badge tone="success">New</Badge>}

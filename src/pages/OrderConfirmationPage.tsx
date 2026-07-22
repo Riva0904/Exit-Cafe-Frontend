@@ -78,6 +78,11 @@ function RateItemRow({ item, orderId }: { item: OrderItem; orderId: string }) {
     onSuccess: () => {
       toast.success('Thanks for rating!');
       queryClient.invalidateQueries({ queryKey: ['order-reviews', orderId] });
+      // Product query keys aren't unified across pages (raw strings on Home, ['product', slug] on
+      // detail, ['products', filters] on Menu) — a rating changes the reviewed product's
+      // avgRating/reviewCount, which every one of those can be showing. Refetch everything mounted
+      // rather than trying to enumerate each key.
+      queryClient.invalidateQueries();
     },
     onError: (err) => toast.error(getErrorMessage(err, 'Could not submit rating')),
   });
