@@ -92,15 +92,17 @@ export function AdminLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-6">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-cream-200/80 hover:bg-white/5 lg:hidden"
-            aria-label="Open admin menu"
-          >
-            <FiMenu size={20} />
-          </button>
-          <span className="font-display text-sm font-bold text-gradient-gold lg:hidden">Exit Caff Admin</span>
-          <NotificationBell />
+          <div className="flex items-center gap-2 lg:hidden">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="rounded-lg p-2 text-cream-200/80 hover:bg-white/5"
+              aria-label="Open admin menu"
+            >
+              <FiMenu size={20} />
+            </button>
+            <span className="font-display text-sm font-bold text-gradient-gold">Exit Caff Admin</span>
+          </div>
+          <NotificationBell className="ml-auto" />
         </div>
         <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
           <Outlet />
